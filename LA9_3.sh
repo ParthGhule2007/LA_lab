@@ -7,58 +7,18 @@ lab start edit-review
 
 lab_file="editing_final_lab.txt"
 
-# 1. Generate the initial file list
+# 1. Output full ls -la listing to the lab file
 ls -la ~ > "$lab_file"
 
-# 2. Process file edits matching the Vim exercise requirements
-python3 - << 'EOF'
-import os
-
-file_name = os.path.expanduser("~/editing_final_lab.txt")
-
-with open(file_name, "r") as f:
-    lines = f.readlines()
-
-# Remove the first 3 lines (total, ., ..)
-lines = lines[3:]
-
-# Remove rows containing 'Desktop' and 'Public'
-lines = [l for l in lines if not re_match(l)]
-
-processed = []
-for line in lines:
-    parts = line.split()
-    if len(parts) >= 9:
-        # Keep first 4 characters of permissions
-        perm = parts[0][:4]
-        links = parts[1]
-        owner = parts[2]
-        # parts[3] (group) is removed
-        size = parts[4]
-        month = parts[5]
-        day = parts[6]
-        # parts[7] (time/year) is removed
-        name = " ".join(parts[8:])
-        processed.append(f"{perm}  {links} {owner} {size} {month} {day} {name}\n")
-
-def re_match(line):
-    return "Desktop" in line or "Public" in line
-
-with open(file_name, "w") as f:
-    for line in lines:
-        if "Desktop" in line or "Public" in line:
-            continue
-        parts = line.split()
-        if len(parts) >= 9:
-            perm = parts[0][:4]
-            links = parts[1]
-            owner = parts[2]
-            size = parts[4]
-            month = parts[5]
-            day = parts[6]
-            name = " ".join(parts[8:])
-            f.write(f"{perm}  {links} {owner}  {size} {month} {day} {name}\n")
-EOF
+# 2. Perform file edits:
+# - Remove first 3 lines
+# - Remove lines containing 'Desktop' or 'Public'
+# - Trim permissions to 4 chars, remove column 4 (group), remove time/year column
+tail -n +4 "$lab_file" | grep -v -E "Desktop|Public" | awk '{
+    sub(/^[a-zA-Z-]{4}[a-zA-Z-]+/, substr($1, 1, 4), $1);
+    name=""; for(i=9; i<=NF; i++) name=(name=="" ? $i : name" "$i);
+    printf "%-4s  %2s %-7s %5s %3s %2s %s\n", substr($1, 1, 4), $2, $3, $5, $6, $7, name
+}' > "${lab_file}.tmp" && mv "${lab_file}.tmp" "$lab_file"
 
 # 3. Create backup file with timestamp in seconds
 cp "$lab_file" "${lab_file}_$(date +%s)"
