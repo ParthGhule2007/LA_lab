@@ -19,3 +19,4 @@ chage -M 15 consultant2
 
 lab grade users-review
 lab finish users-review
+cd ..
