@@ -39,4 +39,5 @@ EOF
 
 # 3. Grade and finish the lab
 lab grade rhcsa-rh124-review1
+lab finish rhcsa-rh124-review1
 cd ..
